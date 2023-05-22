@@ -775,19 +775,28 @@ ssize_t rio_readn(int fd, void *usrbuf, size_t n)
 ssize_t rio_writen(int fd, void *usrbuf, size_t n) 
 {
     size_t nleft = n;
-    ssize_t nwritten;
+    ssize_t nwritten = 0;
     char *bufp = usrbuf;
-
+    printf("1-0\n");
     while (nleft > 0) {
-	if ((nwritten = write(fd, bufp, nleft)) <= 0) {
-	    if (errno == EINTR)  /* Interrupted by sig handler return */
-		nwritten = 0;    /* and call write() again */
-	    else
-		return -1;       /* errno set by write() */
-	}
-	nleft -= nwritten;
-	bufp += nwritten;
+        printf("1-1 nwritten : %lld nleft : %lld\n", nwritten, nleft);
+        if ((nwritten = write(fd, bufp, nleft)) <= 0) {
+            printf("1-1-1\n");
+            if (errno == EINTR){  /* Interrupted by sig handler return */
+                printf("1-2\n");
+                nwritten = 0;    /* and call write() again */
+            }
+            else{
+                printf("1-3\n");
+                return -1;       /* errno set by write() */
+            }
+        }
+        printf("1-4\n");
+        nleft -= nwritten;
+        bufp += nwritten;
+        printf("1-4-1 nwritten : %lld nleft : %lld\n", nwritten, nleft);
     }
+    printf("1-5\n");
     return n;
 }
 /* $end rio_writen */
@@ -907,6 +916,7 @@ ssize_t Rio_readn(int fd, void *ptr, size_t nbytes)
 
 void Rio_writen(int fd, void *usrbuf, size_t n) 
 {
+    printf("Rio_writen\n");
     if (rio_writen(fd, usrbuf, n) != n)
 	unix_error("Rio_writen error");
 }
