@@ -1,14 +1,19 @@
 #include "csapp.h"
 
-/* 아직 테스트 x */
+/* 
+아직 테스트 x 
+Segmentation fault (core dumped)
+오류를 어디서 고쳐야 할지 모르겠음
+*/
 
-void echo(int connfd)
+void echo(int connfd);
 
 void sigchld_handler(int sig)
 {
     while(waitpid(-1,0,WNOHANG) > 0){
-        ;
+
     }
+
     return ;
 }
 
@@ -24,6 +29,7 @@ int main(int argc, char **argv){
     }
     
     port = atoi(argv[1]);
+
     Signal(SIGCHLD, sigchld_handler);
 
     listenfd = Open_listenfd(port);  // 주어진 포트로 소켓 생성 및 바인딩 후 리스닝
@@ -41,5 +47,4 @@ int main(int argc, char **argv){
 
         Close(connfd);
     }
-    exit(0);
 }

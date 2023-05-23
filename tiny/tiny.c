@@ -19,20 +19,22 @@ void serve_dynamic(int fd, char *filename, char *cgiargs, char *method);
 void clienterror(int fd, char *cause, char *errnum, char *shortmsg,
                  char *longmsg);
 void echo(int connfd);
-
+void *thread(void *vargp);
 /* Tiny는 반복실행 서버로 명령줄에서 넘겨받은 포트로의 연결 요청을 듣는다*/
 /* 
 포트 번호를 인자로 받아 클라이언트의 요청이 올 때마다 
 새로 연결 소켓을 만들어 doit 함수를 호출
 ex) 입력 ./tiny 24230   =>  argc = 2, argv[0] = tiny, argv[1] = 8000
 */
-int main(int argc, char **argv) // argo = 인자 개수, argv = 인자 배열
+int main(int argc, char **argv) // argc = 인자 개수, argv = 인자 배열
 { 
-  int listenfd, connfd;
+  int listenfd,  *connfdp;
   char hostname[MAXLINE], port[MAXLINE];
   socklen_t clientlen;
   struct sockaddr_storage clientaddr;
   // 클라이언트에서 연결 요청을 보내면 알 수 있는 클라이언트 연결 소켓 주소
+
+   pthread_t tid;
 
   /* 명령 줄 인수 확인 */
   if (argc != 2) {
@@ -47,26 +49,48 @@ int main(int argc, char **argv) // argo = 인자 개수, argv = 인자 배열
   /* 클라이언트의 요청이 올 때마다 새로 연결 소켓을 만들어 doit()호출 */
   while (1) {
     clientlen = sizeof(clientaddr);
+    
+    connfdp = Malloc(sizeof(int));
+
     /* 클라이언트에게서 받은 연결 요청을 accept 한다. connfd = 서버 연결 식별자*/
-    connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);  // line:netp:tiny:accept
+    *connfdp = Accept(listenfd, (SA *)&clientaddr, &clientlen);  // line:netp:tiny:accept
 
     /* 연결이 성공했다는 메세지를 위해. Getnameinfo를 호출하면서 hostname과 port가 채워진다.*/
     /* 마지막 부분은 flag로 0: 도메인 네임, 1: IP address */
     Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
     printf("Accepted connection from (%s, %s)\n", hostname, port);
 
+
+    Pthread_create(&tid,NULL,thread,connfdp);
+
+    
     /* doit 함수를 실행 */
-    doit(connfd);   // line:netp:tiny:doit
+    // doit(connfd);   // line:netp:tiny:doit
 
     /* 11.6.A */
     //echo(connfd);
 
     /* 서버 연결 식별자를 닫아준다. */
     
-    Close(connfd);  // line:netp:tiny:close
+    // Close(connfd);  // line:netp:tiny:close
 
     printf("==============================================\n\n");
   }
+}
+
+void *thread(void *vargp)
+{
+    // connfd로 전달된 값을 가져옴
+    int connfd = *((int *)vargp);
+    // 스레드 분리
+    Pthread_detach(pthread_self());
+     // 메모리 해제
+    Free(vargp);
+    // 클라이언트와의 통신 수행
+    doit(connfd);
+    // 연결 종료
+    Close(connfd);
+    return NULL;
 }
 
 /* 한개의 HTTP 트랜잭션을 처리한다.*/
@@ -323,7 +347,7 @@ void get_filetype(char *filename, char *filetype)
   }else if (strstr(filename, ".jpg")){
     strcpy(filetype, "image/jpeg");
   }else if (strstr(filename, ".mpg")){ // mpg 파일은 재생되지 않는다.
-    strcpy(filetype, "video/mpg");
+    strcpy(filetype, "video/mpeg");
   }else if (strstr(filename, ".mp4")){ // 11.7
     strcpy(filetype, "video/mp4");
   }else if (strstr(filename, ".ico")){

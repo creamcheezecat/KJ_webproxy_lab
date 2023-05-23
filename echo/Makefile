@@ -25,10 +25,30 @@ echo.o : echo.c
 echoclient.o : echoclient.c csapp.o
 	$(CC) $(CFLAGS) -o echoclient echoclient.c csapp.o $(LIB) 
 
+echoserverp.o : echoserverp.c echo.o csapp.o
+	$(CC) $(CFLAGS) -o echoserverp echoserverp.c echo.o csapp.o $(LIB) 
+
+echoservers.o : echoservers.c echo.o csapp.o
+	$(CC) $(CFLAGS) -o echoservers echoservers.c echo.o csapp.o $(LIB) 
+
+echoservert.o : echoservert.c echo.o csapp.o
+	$(CC) $(CFLAGS) -o echoservert echoservert.c echo.o csapp.o $(LIB)
+
+select.o : select.c echo.o csapp.o
+	$(CC) $(CFLAGS) -o select select.c echo.o csapp.o $(LIB) 
+
+sharing.o : sharing.c echo.o csapp.o
+	$(CC) $(CFLAGS) -o sharing sharing.c echo.o csapp.o $(LIB) 
+
 csapp.o : csapp.c
 	$(CC) $(CFLAGS) -c csapp.c
 
 clean : 
 	rm -f *.o echo *~
 	rm -f echoserveri
+	rm -f echoserverp
+	rm -f echoservers
+	rm -f echoservert
 	rm -f echoclient
+	rm -f select
+	rm -f staring

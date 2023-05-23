@@ -1,7 +1,7 @@
 #include "csapp.h"
 #define N 2
 
-/* 테스트 x */
+/* 테스트 x ??? */
 
 
 void *thread(void *vargp);
